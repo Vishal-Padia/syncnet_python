@@ -43,3 +43,11 @@ data/
 protos/
 utils/
 *.pth
+
+# Virutal Environment #
+#######################
+venv/
+
+# Output #
+#########
+output/
