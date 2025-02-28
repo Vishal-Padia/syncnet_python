@@ -129,6 +129,20 @@ def crop_video(opt,track,cropfile):
   dets['x'] = signal.medfilt(dets['x'],kernel_size=13)
   dets['y'] = signal.medfilt(dets['y'],kernel_size=13)
 
+  # Calculate the maximum face dimensions
+  max_face_width = 0
+  max_face_height = 0
+
+  for det in track['bbox']:
+      width = int((det[2] - det[0]) * (1 + 2 * opt.crop_scale))  # width with padding
+      height = int((det[3] - det[1]) * (1 + 2 * opt.crop_scale))  # height with padding
+      max_face_width = max(max_face_width, width)
+      max_face_height = max(max_face_height, height)
+
+  # Initialize VideoWriter with dynamic size
+  fourcc = cv2.VideoWriter_fourcc(*'XVID')
+  vOut = cv2.VideoWriter(cropfile + "t.avi", fourcc, opt.frame_rate, (max_face_width, max_face_height))
+
   for fidx, frame in enumerate(track['frame']):
 
     cs  = opt.crop_scale
@@ -144,7 +158,20 @@ def crop_video(opt,track,cropfile):
 
     face = frame[int(my-bs):int(my+bs*(1+2*cs)),int(mx-bs*(1+cs)):int(mx+bs*(1+cs))]
     
-    vOut.write(cv2.resize(face,(224,224)))
+    # Resize to match maximum dimensions while maintaining aspect ratio
+    face_h, face_w = face.shape[:2]
+    scale = min(max_face_height / face_h, max_face_width / face_w)
+    new_h, new_w = int(face_h * scale), int(face_w * scale)
+
+    # Resize and pad if necessary to maintain consistent dimensions
+    resized_face = cv2.resize(face, (new_w, new_h))
+    final_face = np.zeros((max_face_height, max_face_width, 3), dtype=np.uint8) + 110
+    y_offset = (max_face_height - new_h) // 2
+    x_offset = (max_face_width - new_w) // 2
+    final_face[y_offset:y_offset + new_h, x_offset:x_offset + new_w] = resized_face
+    
+    # vOut.write(cv2.resize(face,(224,224)))
+    vOut.write(final_face)
 
   audiotmp    = os.path.join(opt.tmp_dir,opt.reference,'audio.wav')
   audiostart  = (track['frame'][0])/opt.frame_rate
