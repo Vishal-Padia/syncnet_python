@@ -421,6 +421,16 @@ def merge_face_tracks(opt, output_file=None):
             os.remove(temp_filename)
 
 
+# Here something else that we can do too
+# Once we have divided the video in to different chunks, we can process each chunk in parallel
+# This will speed up the process of face detection and tracking
+# And while merging the tracks we can also merge chunks according to the person
+# Meaning that we can merge the tracks of the same person from different chunks
+# This will give us a better result and we can also track the person in the video more accurately
+# One issue can be audio of different chunks but I think we can do this by merging the audio of the chunks too
+# This will give us a better result and we can also track the person in the video more accurately
+
+
 # ========== ========== ========== ==========
 # # EXECUTE DEMO
 # ========== ========== ========== ==========
